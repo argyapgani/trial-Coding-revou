@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hand Clicker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Zoom pulse animation triggered by JS adding .clicked class */
+    @keyframes zoomPulse {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.35); }
+      100% { transform: scale(1); }
+    }
+
+    #hand.clicked {
+      animation: zoomPulse 0.4s ease-in-out forwards;
+    }
+
+    /* Floating word animation */
+    @keyframes floatUp {
+      0%   { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-120px) scale(1.3); }
+    }
+
+    .float-word {
+      animation: floatUp 1s ease-out forwards;
+      pointer-events: none;
+      position: absolute;
+      font-size: 1.5rem;
+      font-weight: 800;
+      white-space: nowrap;
+      user-select: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-yellow-100 via-pink-100 to-purple-100 flex flex-col items-center justify-center select-none overflow-hidden">
+
+  <!-- Click Counter — top right -->
+  <div class="fixed top-4 right-6 bg-white/70 backdrop-blur-sm rounded-2xl px-5 py-3 shadow-lg text-right">
+    <p class="text-xs text-gray-400 uppercase tracking-widest font-semibold">Clicks</p>
+    <p id="counter" class="text-4xl font-extrabold text-purple-600 leading-none">0</p>
+  </div>
+
+  <!-- Title -->
+  <h1 class="text-3xl font-bold text-purple-700 mb-2 tracking-tight">Give it a tap! 👇</h1>
+  <p class="text-gray-400 text-sm mb-10">Click the hand as many times as you can</p>
+
+  <!-- Hand Button -->
+  <div class="relative flex items-center justify-center">
+    <div
+      id="hand"
+      class="text-[10rem] cursor-pointer drop-shadow-xl transition-none"
+      title="Click me!"
+    >🤚</div>
+  </div>
+
+  <!-- Floating words container -->
+  <div id="floaties" class="fixed inset-0 pointer-events-none"></div>
+
+  <script>
+    const hand      = document.getElementById('hand');
+    const counter   = document.getElementById('counter');
+    const floaties  = document.getElementById('floaties');
+
+    const words = [
+      'Yay!', 'Woo!', 'Nice!', 'Yeah!', 'Let\'s go!',
+      'Awesome!', 'Great!', 'Woohoo!', '🎉', 'Sweet!',
+      'Fantastic!', 'Epic!', '✨', 'Boom!', 'Amazing!'
+    ];
+
+    const colors = [
+      'text-pink-500', 'text-purple-500', 'text-yellow-500',
+      'text-green-500', 'text-blue-500', 'text-red-500', 'text-orange-500'
+    ];
+
+    let clicks = 0;
+
+    hand.addEventListener('click', (e) => {
+      // Increment counter
+      clicks++;
+      counter.textContent = clicks;
+
+      // Zoom animation — remove then re-add class to retrigger
+      hand.classList.remove('clicked');
+      void hand.offsetWidth; // reflow to restart animation
+      hand.classList.add('clicked');
+
+      // Remove class after animation ends so it can retrigger next click
+      hand.addEventListener('animationend', () => {
+        hand.classList.remove('clicked');
+      }, { once: true });
+
+      // Spawn floating word near click position
+      spawnWord(e.clientX, e.clientY);
+    });
+
+    function spawnWord(x, y) {
+      const word = document.createElement('span');
+      const text = words[Math.floor(Math.random() * words.length)];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+
+      word.textContent = text;
+      word.className = `float-word ${color}`;
+
+      // Offset slightly so words don't all stack on top of each other
+      const offsetX = (Math.random() - 0.5) * 80;
+      word.style.left = `${x + offsetX}px`;
+      word.style.top  = `${y - 20}px`;
+
+      floaties.appendChild(word);
+
+      // Clean up after animation
+      word.addEventListener('animationend', () => word.remove());
+    }
+  </script>
+
+</body>
+</html>
